@@ -2,6 +2,7 @@
 #include <sensor_msgs/JointState.h>
 #include <visualization_msgs/MarkerArray.h>
 
+#include "robile_gazebo/SimpleController.h"
 #include "robile_gazebo/Robile.h"
 
 Robile::Robile(ros::NodeHandle& nh):
@@ -32,6 +33,14 @@ void Robile::publishPivotMarkers() const {
 
 void Robile::step() {
     // Implement Controller here
+    std::map< std::string, std::pair< double, double > > controlCommands = 
+        getWheelVelocities(_drives, _cmdVelX, _cmdVelY);
+
+    for (const auto& drive: controlCommands) {
+        const std::string& driveName = drive.first;
+        const std::pair<double, double>& wheelVelocities = drive.second;
+        _drives.at(driveName).setHubWheelVelocities(wheelVelocities.first, wheelVelocities.second);
+    }
 }
 
 void  Robile::initDrives(const std::map<std::string, double>& pivotJointData) {
