@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.5.1)
 project(robile_gazebo)
+
+add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS roscpp rviz)
 
