@@ -3,7 +3,7 @@ project(robile_gazebo)
 
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS roscpp rviz)
+find_package(catkin REQUIRED COMPONENTS roscpp rviz kelo_tulip)
 
 find_package(gazebo)
 find_package(roslaunch)

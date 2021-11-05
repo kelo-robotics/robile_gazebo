@@ -3,6 +3,7 @@
 
 #include <sensor_msgs/JointState.h>
 #include <tf/transform_listener.h>
+#include "kelo_tulip/VelocityPlatformController.h"
 
 #include "KeloDrive.h"
 
@@ -27,6 +28,9 @@ protected:
     ros::Publisher _pivotMarkersPublisher;
 
     double _cmdVelX, _cmdVelY, _cmdVelA;
+
+	kelo::VelocityPlatformController _controller;
+    std::map<std::string, kelo::WheelConfig> _wheelConfigs;
 };
 
 #endif //ROBILE_H

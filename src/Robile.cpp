@@ -32,7 +32,19 @@ void Robile::publishPivotMarkers() const {
 }
 
 void Robile::step() {
-    // Implement Controller here
+	_controller.setPlatformTargetVelocity(_cmdVelX, _cmdVelY, _cmdVelA);
+	_controller.calculatePlatformRampedVelocities();
+
+    for (const auto& drive: _drives) {
+        const std::string& driveName = drive.first;
+        int wheelNumber = _wheelConfigs[driveName].ethercatNumber;
+        float setpoint1, setpoint2;
+        _controller.calculateWheelTargetVelocity(wheelNumber, drive.second.getPivotOrientation(), setpoint1, setpoint2);
+        _drives.at(driveName).setHubWheelVelocities(setpoint1, setpoint2);
+    }
+
+/*
+    // Example with simple controller
     std::map< std::string, std::pair< double, double > > controlCommands = 
         getWheelVelocities(_drives, _cmdVelX, _cmdVelY);
 
@@ -41,6 +53,7 @@ void Robile::step() {
         const std::pair<double, double>& wheelVelocities = drive.second;
         _drives.at(driveName).setHubWheelVelocities(wheelVelocities.first, wheelVelocities.second);
     }
+*/
 }
 
 void  Robile::initDrives(const std::map<std::string, double>& pivotJointData) {
@@ -67,6 +80,21 @@ void  Robile::initDrives(const std::map<std::string, double>& pivotJointData) {
                                                 transform.getOrigin().z(),
                                                 joint.second)));
     }
+
+    // init controller
+    std::vector<kelo::WheelConfig> wheelConfigsVector;
+	int wheelNumber = 0;
+    double zDummy = 0;
+    for (const auto& drive: _drives) {
+        kelo::WheelConfig wc;
+        wc.ethercatNumber = wheelNumber; // to associate between wheel name used in simulation and number used in controller
+        drive.second.getPos(wc.x, wc.y, zDummy);
+        wc.a = 0; // assume zero in simulation
+        _wheelConfigs[drive.first] = wc;
+        wheelConfigsVector.push_back(wc);
+        wheelNumber++;
+    }
+    _controller.initialise(wheelConfigsVector);
 
     ROS_INFO("Initialized %d Kelo drives", _drives.size());
 }
