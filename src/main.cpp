@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "robile_gazebo_controller");
     ros::NodeHandle nh;
     ros::Subscriber cmdVelSubscriber = nh.subscribe("/cmd_vel", 10, cmdVelCallBack);
-    ros::Subscriber joySubscriber = nh.subscribe("/joy", 1000, cmdVelCallBack);
+    ros::Subscriber joySubscriber = nh.subscribe("/joy", 1000, joyCallback);
 
     robile = new Robile(nh);
 
