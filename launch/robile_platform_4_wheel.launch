@@ -54,4 +54,6 @@
               front_right_robile_drive_left_hub_wheel_controller
               front_right_robile_drive_right_hub_wheel_controller" />
 
+    <node name="robile_gazebo" pkg="robile_gazebo" type="robile_gazebo" />
+
 </launch>
