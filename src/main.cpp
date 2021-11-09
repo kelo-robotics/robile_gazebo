@@ -26,11 +26,13 @@ int main(int argc, char** argv) {
 
     robile = new Robile(nh);
 
-    ros::Rate loopRate(10);
+    ros::Rate loopRate(20);
     while (ros::ok()) {
         ros::spinOnce();
-        robile->publishPivotMarkers();
         robile->step();
+        robile->publishOdomToBaseLinkTF();
+        robile->publishOdom();
+        robile->publishPivotMarkers();
 
         loopRate.sleep();
     }
