@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="robile_platform_4_wheel_gazebo">
 
     <!-- Including the xacro file instantiates the robot -->
-    <xacro:include filename="$(find robile_description)/robots/robile_platform_4_wheel.urdf.xacro" />
+    <xacro:include filename="$(find robile_description)/robots/robile_platform_4_active_wheel.urdf.xacro" />
 
     <!-- Start gazebo ros control plugin -->
     <gazebo>
