@@ -10,8 +10,8 @@ _xPos(xPos),
 _yPos(yPos), 
 _zPos(zPos), 
 _pivotOrientation(pivotOrientation) {
-    std::string leftHubWheelTopic = name + std::string("_drive_left_hub_wheel_controller/command");
-    std::string rightHubWheelTopic = name + std::string("_drive_right_hub_wheel_controller/command");
+    std::string leftHubWheelTopic = name + std::string("_left_hub_wheel_controller/command");
+    std::string rightHubWheelTopic = name + std::string("_right_hub_wheel_controller/command");
     _leftHubWheelVelPub = nh.advertise<std_msgs::Float64>(leftHubWheelTopic, 1);
     _rightHubWheelVelPub = nh.advertise<std_msgs::Float64>(rightHubWheelTopic, 1);
 }
