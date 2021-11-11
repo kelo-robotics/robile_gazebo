@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="platform_config" value="4_wheel_config"/>
+    <arg name="hub_wheel_controller_list" 
+         value="robile_2_left_hub_wheel_controller
+                robile_2_right_hub_wheel_controller
+                robile_6_left_hub_wheel_controller
+                robile_6_right_hub_wheel_controller
+                robile_5_left_hub_wheel_controller
+                robile_5_right_hub_wheel_controller
+                robile_1_left_hub_wheel_controller
+                robile_1_right_hub_wheel_controller" />
+
+    <include file="$(find robile_gazebo)/launch/platform_independent/robile_gazebo.launch">
+        <arg name="platform_config" value="$(arg platform_config)"/>
+        <arg name="hub_wheel_controller_list" value="$(arg hub_wheel_controller_list)"/>
+    </include>
+
+</launch>

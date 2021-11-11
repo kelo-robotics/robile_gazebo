@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 
 <launch>
+    <!-- platform_config name (should be defined in the 'robile_description' ros package) -->
+    <arg name="platform_config"/>
+    <arg name="hub_wheel_controller_list"/>
+
     <!-- ROBOT SPAWN POSE -->
     <arg name="init_pos_x" default="0.0"/>
     <arg name="init_pos_y" default="0.0"/>
@@ -24,7 +28,7 @@
     </include>
 
     <!-- launch robot -->
-    <param name="robot_description" command="$(find xacro)/xacro $(find robile_gazebo)/robots/robile_platform_2_active_wheel_gazebo.urdf.xacro" />
+    <param name="robot_description" command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile.xacro' platform_config:=$(arg platform_config)" />
     <node pkg="gazebo_ros" type="spawn_model" name="spawn_robot" respawn="false" output="screen" args="-param robot_description
         -urdf
         -x $(arg init_pos_x)
@@ -39,17 +43,12 @@
     </node>
 
     <!-- Load joint controller configurations from YAML file to parameter server -->
-    <rosparam file="$(find robile_gazebo)/config/controller/robile_platform_2_active_wheel_gazebo_ros_controllers.yaml" command="load"/>
-
-    <!-- spawn controller -->
-    <node name="joint_state_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
-          args="joint_state_controller
-
-              rear_left_robile_drive_left_hub_wheel_controller
-              rear_left_robile_drive_right_hub_wheel_controller
-              rear_right_robile_drive_left_hub_wheel_controller
-              rear_right_robile_drive_right_hub_wheel_controller" />
+    <rosparam file="$(find robile_gazebo)/config/ros_controller/$(arg platform_config).yaml" command="load"/>
 
     <node name="robile_gazebo" pkg="robile_gazebo" type="robile_gazebo" />
+
+    <!-- spawn controllers -->
+    <node name="robile_ros_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
+          args="joint_state_controller $(arg hub_wheel_controller_list)" />
 
 </launch>
