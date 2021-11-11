@@ -16,9 +16,14 @@
                 robile_15_left_hub_wheel_controller
                 robile_15_right_hub_wheel_controller" />
 
+    <arg name="start_rviz" default="true"/>
+    <arg name="gazebo_gui" default="false"/>
+
     <include file="$(find robile_gazebo)/launch/platform_independent/robile_gazebo.launch">
         <arg name="platform_config" value="$(arg platform_config)"/>
         <arg name="hub_wheel_controller_list" value="$(arg hub_wheel_controller_list)"/>
+        <arg name="start_rviz" value="$(arg start_rviz)"/>
+        <arg name="gazebo_gui" value="$(arg gazebo_gui)"/>
     </include>
 
 </launch>
