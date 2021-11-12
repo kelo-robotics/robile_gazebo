@@ -43,28 +43,84 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 
+/**
+ * @brief Class to store information about and manage an individual Kelo drive
+ * that is part of a robile platform
+ *
+ */
 class KeloDrive {
-public:
-    KeloDrive(ros::NodeHandle& nh, const std::string& name, double xPos, double yPos, double zPos, double pivotOrientation);
+  public:
+    /**
+     * @brief Construct a new Kelo Drive object
+     *
+     * @param nh Node handle for the ros node managing the platform controller
+     * @param name Name of the Kelo drive
+     * @param xPos Position of the kelo drive along the x-axis of the base_link
+     * @param yPos Position of the kelo drive along the y-axis of the base_link
+     * @param zPos Position of the kelo drive along the z-axis of the base_link
+     * @param pivotOrientation Initial orientation of the kelo drive pivot with
+     * respect to the base_link
+     */
+    KeloDrive(ros::NodeHandle& nh, const std::string& name, double xPos,
+              double yPos, double zPos, double pivotOrientation);
+
+    /**
+     * @brief Destroy the Kelo Drive object
+     *
+     */
     virtual ~KeloDrive() {}
 
-    bool init();
-
+    /**
+     * @brief Get the position of the kelo drive w.r.t base_link
+     *
+     * @param xPos
+     * @param yPos
+     * @param zPos
+     */
     void getPos(double& xPos, double& yPos, double& zPos) const;
 
-    void setPivotOrientation(double orientation) { _pivotOrientation = orientation; }
+    /**
+     * @brief Set the latest pivot orientation of the kelo drive
+     *
+     * @param orientation Latest pivot orientation w.r.t base_link
+     */
+    void setPivotOrientation(double orientation)
+    {
+        _pivotOrientation = orientation;
+    }
+
+    /**
+     * @brief Get the latest pivot orientation of the kelo drive
+     *
+     * @return double Latest pivot orientation w.r.t base_link
+     */
     double getPivotOrientation() const { return _pivotOrientation; }
+
+    /**
+     * @brief Get an RViz marker object representing the pose of the kelo drive
+     * pivot for debugging purposes
+     *
+     * @return visualization_msgs::Marker marker representing current pose of
+     * the kelo drive pivot
+     */
     visualization_msgs::Marker getPivotMarker() const;
 
+    /**
+     * @brief Set the desired angular velocities for each of the two hub wheels
+     * of the kelo drive
+     *
+     * @param leftAngVel Angular velocity for the left hub wheel in rad/s
+     * @param rightAngVel Angular velocity for the right hub wheel in rad/s
+     */
     void setHubWheelVelocities(double leftAngVel, double rightAngVel);
 
-protected:
+  protected:
     std::string _name;
- 
+
     double _xPos, _yPos, _zPos;
     double _pivotOrientation;
 
     ros::Publisher _leftHubWheelVelPub, _rightHubWheelVelPub;
 };
 
-#endif //KELO_DRIVE_H
+#endif // KELO_DRIVE_H
