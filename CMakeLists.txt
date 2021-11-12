@@ -17,13 +17,13 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(robile_gazebo
+add_executable(robile_gazebo_platform_controller
     src/KeloDrive.cpp
     src/RobilePlatformController.cpp
     src/main.cpp
 )
 
-target_link_libraries(robile_gazebo
+target_link_libraries(robile_gazebo_platform_controller
     ${catkin_LIBRARIES}
 )
 

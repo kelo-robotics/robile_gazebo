@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 
 <launch>
+    <!--
+        Mandatory arguments to specify the platform configuration and hub 
+        wheel controller list
+    -->
     <arg name="platform_config" value="4_wheel_config"/>
     <arg name="hub_wheel_controller_list" 
          value="robile_2_left_hub_wheel_controller
@@ -12,6 +16,10 @@
                 robile_1_left_hub_wheel_controller
                 robile_1_right_hub_wheel_controller" />
 
+    <!--
+        Several Optional arguments can be passed.
+        Check the below launch file for full list of available arguments
+    -->
     <include file="$(find robile_gazebo)/launch/platform_independent/robile_gazebo.launch" pass_all_args="true"/>
 
 </launch>

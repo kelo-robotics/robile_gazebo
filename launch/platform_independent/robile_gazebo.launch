@@ -17,9 +17,12 @@
     <arg name="headless" default="true"/>
     <arg name="debug" default="false"/>
     <arg name="paused" default="false"/>
-    <arg name="start_rviz" default="true"/>
 
-    <!-- launch gazebo with world -->
+    <!-- RViz startup options -->
+    <arg name="start_rviz" default="true"/>
+    <arg name="rviz_config" default="$(find robile_gazebo)/config/rviz/robile.rviz"/>
+
+    <!-- launch gazebo with empty world -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="paused" value="$(arg paused)"/>
         <arg name="use_sim_time" value="$(arg use_sim_time)"/>
@@ -28,7 +31,7 @@
         <arg name="debug" value="$(arg debug)"/>
     </include>
 
-    <!-- launch robot -->
+    <!-- launch robot in Gazebo -->
     <param name="robot_description" command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile.xacro' platform_config:=$(arg platform_config)" />
     <node pkg="gazebo_ros" type="spawn_model" name="spawn_robot" respawn="false" output="screen" args="-param robot_description
         -urdf
@@ -39,6 +42,7 @@
         -model robile">
     </node>
 
+    <!-- Start the robot state publisher node to publish information of fixed joints -->
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
         <param name="publish_frequency" type="double" value="30.0" />
     </node>
@@ -46,12 +50,14 @@
     <!-- Load joint controller configurations from YAML file to parameter server -->
     <rosparam file="$(find robile_gazebo)/config/ros_controller/$(arg platform_config).yaml" command="load"/>
 
-    <node name="robile_gazebo" pkg="robile_gazebo" type="robile_gazebo" />
+    <!-- Start the Gazebo platform controller node -->
+    <node name="robile_gazebo_platform_controller" pkg="robile_gazebo" type="robile_gazebo_platform_controller" />
 
     <!-- spawn controllers -->
     <node name="robile_ros_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
           args="joint_state_controller $(arg hub_wheel_controller_list)" />
 
-    <node pkg="rviz" type="rviz" name="robile_rviz" args="-d $(find robile_gazebo)/config/rviz/robile.rviz" if="$(arg start_rviz)"/>
+    <!-- (Optional) Start RViz -->
+    <node pkg="rviz" type="rviz" name="robile_rviz" args="-d $(arg rviz_config)" if="$(arg start_rviz)"/>
 
 </launch>
