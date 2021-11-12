@@ -86,7 +86,8 @@ class RobilePlatformController {
     void setMaxPlatformVelocity(double linearVel, double angularVel);
 
     /**
-     * @brief
+     * @brief Controller step which computes and sets the desired hub wheel
+     * velocities to each hub wheel based on the commanded platform velocity
      *
      */
     void step();
@@ -171,23 +172,119 @@ class RobilePlatformController {
      */
     std::string getRobileBrickName(const std::string& jointName);
 
+    /**
+     * @brief Node handle for the ros node managing the platform controller
+     * 
+     */
     ros::NodeHandle& _nh;
+
+    /**
+     * @brief A store for kelo drives attached to the robile platform.
+     * The key for the store is the name of the kelo drive and the value is the
+     * kelo drive object
+     * 
+     */
     std::map< std::string, KeloDrive > _drives;
+
+    /**
+     * @brief Flag to indicate if the platform has been successfully initialized
+     * and is ready for operation
+     * 
+     */
     bool _initialized;
+
+    /**
+     * @brief A TransformListener object to receive the latest transforms
+     * between the robot links
+     * 
+     */
     tf::TransformListener _tfListener;
+
+    /**
+     * @brief A ROS subscriber to receive Joint state information of all
+     * robot joints
+     * 
+     */
     ros::Subscriber _jointStatesSubscriber;
+
+    /**
+     * @brief A ROS subscriber to receive Link state information of all
+     * robot links from Gazebo
+     * 
+     */
     ros::Subscriber _gazeboLinkStatesSubscriber;
+
+    /**
+     * @brief A ROS publisher to publish the platform odometry information
+     * 
+     */
     ros::Publisher _odomPublisher;
+
+    /**
+     * @brief A ROS publisher to publish the transform from odom to base_link 
+     * frames
+     * 
+     */
     ros::Publisher _odomTFPublisher;
+
+    /**
+     * @brief A ROS publisher to publish RViz markers representing the pivot
+     * poses of every kelo drive attached to the platform
+     * 
+     */
     ros::Publisher _pivotMarkersPublisher;
 
-    double _cmdVelX, _cmdVelY, _cmdVelA;
+    /**
+     * @brief The desired linear platform velocity along the x-axis of base_link
+     * 
+     */
+    double _cmdVelX;
 
+    /**
+     * @brief The desired linear platform velocity along the y-axis of base_link
+     * 
+     */
+    double _cmdVelY;
+
+    /**
+     * @brief The desired angular platform velocity around the z-axis of 
+     * base_link
+     * 
+     */
+    double _cmdVelA;
+
+    /**
+     * @brief A ROS odometry message with the latest odometry information that
+     * can be published
+     * 
+     */
     nav_msgs::Odometry _odomMsg;
+
+    /**
+     * @brief Minimum time duration between two consecutive odometry messages 
+     * being published. This is set based on the desired odom publish frequency
+     * 
+     */
     ros::Duration _odomDuration;
+
+    /**
+     * @brief Time at which the last odom message was published
+     * 
+     */
     ros::Time _lastOdomPubTime;
 
+    /**
+     * @brief Velocity platform controller to convert platform velocity to each
+     * individual hub wheel velocities
+     * 
+     */
     kelo::VelocityPlatformController _controller;
+
+    /**
+     * @brief Store of Wheel configuration required by the Velocity platform 
+     * controller
+     * 
+     */
     std::map< std::string, kelo::WheelConfig > _wheelConfigs;
 };
 

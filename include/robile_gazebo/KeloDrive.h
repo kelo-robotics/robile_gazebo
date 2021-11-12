@@ -112,12 +112,49 @@ class KeloDrive {
     void setHubWheelVelocities(double leftAngVel, double rightAngVel);
 
   protected:
+    /**
+     * @brief Name of the kelo drive
+     * 
+     */
     std::string _name;
 
-    double _xPos, _yPos, _zPos;
+    /**
+     * @brief Position of the kelo drive along the x-axis of the base_link
+     * 
+     */
+    double _xPos;
+
+    /**
+     * @brief Position of the kelo drive along the y-axis of the base_link
+     * 
+     */
+    double _yPos;
+
+    /**
+     * @brief Position of the kelo drive along the z-axis of the base_link
+     * 
+     */
+    double _zPos;
+
+    /**
+     * @brief Orientation of the kelo drive pivot with respect to the base_link
+     * 
+     */
     double _pivotOrientation;
 
-    ros::Publisher _leftHubWheelVelPub, _rightHubWheelVelPub;
+    /**
+     * @brief ROS publishers for setting the desired velocity for the left hub 
+     * wheel
+     * 
+     */
+    ros::Publisher _leftHubWheelVelPub;
+
+    /**
+     * @brief ROS publishers for setting the desired velocity for the right hub 
+     * wheel
+     * 
+     */
+    ros::Publisher _rightHubWheelVelPub;
 };
 
 #endif // KELO_DRIVE_H
