@@ -147,7 +147,7 @@ void  RobilePlatformController::initDrives(const std::map<std::string, double>& 
     _controller.initialise(wheelConfigsVector);
 
     _initialized = true;
-    ROS_INFO("Initialized %d Kelo drives", _drives.size());
+    ROS_INFO("Initialized %lu Kelo drives", _drives.size());
 }
 
 void RobilePlatformController::jointStatesCallBack(const sensor_msgs::JointState& msg) {

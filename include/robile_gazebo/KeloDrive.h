@@ -84,10 +84,7 @@ class KeloDrive {
      *
      * @param orientation Latest pivot orientation w.r.t base_link
      */
-    void setPivotOrientation(double orientation)
-    {
-        _pivotOrientation = orientation;
-    }
+    void setPivotOrientation(double orientation);
 
     /**
      * @brief Get the latest pivot orientation of the kelo drive

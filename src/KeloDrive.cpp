@@ -61,6 +61,10 @@ void KeloDrive::getPos(double& xPos, double& yPos, double& zPos) const {
     zPos = _zPos;
 }
 
+void KeloDrive::setPivotOrientation(double orientation) {
+    _pivotOrientation = orientation;
+}
+
 visualization_msgs::Marker KeloDrive::getPivotMarker() const {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "base_link";
