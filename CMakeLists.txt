@@ -19,7 +19,7 @@ include_directories(
 
 add_executable(robile_gazebo
     src/KeloDrive.cpp
-    src/Robile.cpp
+    src/RobilePlatformController.cpp
     src/main.cpp
 )
 
