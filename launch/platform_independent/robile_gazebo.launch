@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 
 <launch>
-    <!-- platform_config name (should be defined in the 'robile_description' ros package) -->
-    <arg name="platform_config"/>
+    <!-- platform_configuration options -->
+    <arg name="platform_config"/> <!-- (must be defined in the 'robile_description' ros package) -->
     <arg name="hub_wheel_controller_list"/>
+    <arg name="platform_max_lin_vel" default="1.0"/> <!-- in m/s -->
+    <arg name="platform_max_ang_vel" default="1.0"/> <!-- in rad/s -->
 
     <!-- ROBOT SPAWN POSE -->
     <arg name="init_pos_x" default="0.0"/>
@@ -51,6 +53,8 @@
     <rosparam file="$(find robile_gazebo)/config/ros_controller/$(arg platform_config).yaml" command="load"/>
 
     <!-- Start the Gazebo platform controller node -->
+    <param name="platform_max_lin_vel" type="double" value="$(arg platform_max_lin_vel)"/>
+    <param name="platform_max_ang_vel" type="double" value="$(arg platform_max_ang_vel)"/>
     <node name="robile_gazebo_platform_controller" pkg="robile_gazebo" type="robile_gazebo_platform_controller" />
 
     <!-- spawn controllers -->

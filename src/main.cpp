@@ -64,7 +64,20 @@ int main(int argc, char** argv) {
     ros::Subscriber cmdVelSubscriber = nh.subscribe("/cmd_vel", 10, cmdVelCallBack);
     ros::Subscriber joySubscriber = nh.subscribe("/joy", 1000, joyCallback);
 
+    // Load max linear velocity
+    double platformMaxLinVel;
+    if (!ros::param::get("/platform_max_lin_vel", platformMaxLinVel)) {
+        platformMaxLinVel = 1.0;
+    }
+
+    // Load max angular velocity
+    double platformMaxAngVel;
+    if (!ros::param::get("/platform_max_ang_vel", platformMaxAngVel)) {
+        platformMaxAngVel = 1.0;
+    }
+
     platformController = new RobilePlatformController(nh);
+    platformController->setMaxPlatformVelocity(platformMaxLinVel, platformMaxAngVel);
 
     ros::Rate loopRate(20);
     while (ros::ok()) {
