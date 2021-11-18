@@ -153,9 +153,9 @@ A platform specific launch file can be defined as follows:
         <arg name="platform_config" value="simple_config"/>
         <arg name="hub_wheel_controller_list" 
              value="robile_3_left_hub_wheel_controller
-                     robile_3_right_hub_wheel_controller
-                     robile_4_left_hub_wheel_controller
-                     robile_4_right_hub_wheel_controller" />
+                    robile_3_right_hub_wheel_controller
+                    robile_4_left_hub_wheel_controller
+                    robile_4_right_hub_wheel_controller" />
 
         <include file="$(find robile_gazebo)/launch/platform_independent/robile_gazebo.launch" pass_all_args="true"/>
     </launch>
