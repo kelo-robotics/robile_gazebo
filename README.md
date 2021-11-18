@@ -33,7 +33,7 @@ roslaunch robile_gazebo 4_wheel_platform.launch
 
 You can then publish command velocities on the ros topic `/cmd_vel` to move the robot around.
 
-### Launch params most relevant
+### Additional launch file arguments
 
 Several arguments can be passed when launching the simulator. A complete list of supported roslaunch arguments can be found in the [launch/platform_independent/robile_gazebo.launch](launch/platform_independent/robile_gazebo.launch) file. We list a few most important ones here.
 
