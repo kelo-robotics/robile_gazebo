@@ -33,7 +33,59 @@ To start the gazebo simulator, use one of the launch files defined in the [launc
 roslaunch robile_gazebo 4_wheel_platform.launch
 ~~~
 
-You can then publish command velocities on the ros topic `/cmd_vel` to move the robot around.
+You can then publish command velocities on the ros topic `/cmd_vel` to move the robot around. For example, to move the robot forward with 0.5 m/s velocity, execute the below command in a new terminal:
+
+~~~ sh
+rostopic pub /cmd_vel geometry_msgs/Twist "linear:
+  x: 0.5
+  y: 0.0
+  z: 0.0
+angular:
+  x: 0.0
+  y: 0.0
+  z: 0.0" -r 10
+~~~
+
+### Moving the robot using a keyboard
+
+The [teleop_twist_keyboard](http://wiki.ros.org/teleop_twist_keyboard) ROS package can be used to simplify controlling the motion of the robot. This requires a one time installation of the `teleop_twist_keyboard` package using the below command:
+
+~~~ sh
+sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard
+source /opt/ros/$ROS_DISTRO/setup.bash
+~~~
+
+Then start the `teleop_twist_keyboard.py` node using the command `rosrun teleop_twist_keyboard teleop_twist_keyboard.py` and move the robot as per the instructions displayed on the terminal. Below is an example of the output after running the node:
+
+~~~
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py 
+
+Reading from the keyboard  and Publishing to Twist!
+---------------------------
+Moving around:
+   u    i    o
+   j    k    l
+   m    ,    .
+
+For Holonomic mode (strafing), hold down the shift key:
+---------------------------
+   U    I    O
+   J    K    L
+   M    <    >
+
+t : up (+z)
+b : down (-z)
+
+anything else : stop
+
+q/z : increase/decrease max speeds by 10%
+w/x : increase/decrease only linear speed by 10%
+e/c : increase/decrease only angular speed by 10%
+
+CTRL-C to quit
+
+currently:	speed 0.5	turn 1.0 
+~~~
 
 ### Additional launch file arguments
 
