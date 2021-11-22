@@ -63,7 +63,7 @@ Simulating a custom platform, requires defining the robot configuration in a URD
 
 ### Step-2: Define ros-control configuration file for the custom platform
 
-Lets assume our custom platform config is called `simple_config` (continuing from the example in the [robile_description example](https://git.locomotec.com:444/kelo/platforms/robile_description#building-a-custom-robile-platform-configuration)). Follow the below steps to add ros-controllers for the custom platform.
+Lets assume our custom platform config is called `simple_config` (continuing from the [robile_description tutorial](https://git.locomotec.com:444/kelo/platforms/robile_description#tutorial-building-a-custom-robile-platform-configuration)). Follow the below steps to add ros-controllers for the custom platform.
 
 1. Add a new file called `simple_config.yaml` in the directory [config/ros_controller/](config/ros_controller/). **This file name must match the name of the platform defined in the robile_description package.**
 2. Add the following block of code to the file to create a [joint_state_controller](http://wiki.ros.org/ros_control#Controllers).
