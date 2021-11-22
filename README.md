@@ -5,7 +5,7 @@ Gazebo simulations for KELO ROBILE robots
 ## Installation
 In addition to a few ROS dependencies, this package also depends on the following packages provided by KELO-robotics:
 1. [kelo_tulip](https://github.com/kelo-robotics/kelo_tulip)
-2. [robile_description](https://git.locomotec.com:444/kelo/platforms/robile_description)
+2. [robile_description](https://github.com/kelo-robotics/robile_description)
 
 Assuming you have a catkin workspace at `~/catkin_ws`, execute the below commands to install the simulator and its dependencies
 
@@ -14,8 +14,8 @@ sudo apt install ros-$ROS_DISTRO-controller-manager ros-$ROS_DISTRO-effort-contr
 
 cd ~/catkin_ws/src
 git clone https://github.com/kelo-robotics/kelo_tulip.git
-git clone https://chavan@git.locomotec.com:444/kelo/platforms/robile_description.git
-git clone https://chavan@git.locomotec.com:444/kelo/simulation/robile_gazebo.git
+git clone https://github.com/kelo-robotics/robile_description.git
+git clone https://github.com/kelo-robotics/robile_gazebo.git
 
 catkin build kelo_tulip # you will need to enter your password for the kelo_tulip build to complete
 
@@ -59,11 +59,11 @@ In this section we describe the procedure to simulate custom ROBILE platform con
 
 ### Step-1: Add a new ROBILE platform definition
 
-Simulating a custom platform, requires defining the robot configuration in a URDF file. This must be done in the [robile_description](https://git.locomotec.com:444/kelo/platforms/robile_description) package and detailed instructions for the same are available [here](https://git.locomotec.com:444/kelo/platforms/robile_description#tutorial-building-a-custom-robile-platform-configuration).
+Simulating a custom platform, requires defining the robot configuration in a URDF file. This must be done in the [robile_description](https://github.com/kelo-robotics/robile_description) package and detailed instructions for the same are available [here](https://github.com/kelo-robotics/robile_description#tutorial-building-a-custom-robile-platform-configuration).
 
 ### Step-2: Define ros-control configuration file for the custom platform
 
-Lets assume our custom platform config is called `simple_config` (continuing from the [robile_description tutorial](https://git.locomotec.com:444/kelo/platforms/robile_description#tutorial-building-a-custom-robile-platform-configuration)). Follow the below steps to add ros-controllers for the custom platform.
+Lets assume our custom platform config is called `simple_config` (continuing from the [robile_description tutorial](https://github.com/kelo-robotics/robile_description#tutorial-building-a-custom-robile-platform-configuration)). Follow the below steps to add ros-controllers for the custom platform.
 
 1. Add a new file called `simple_config.yaml` in the directory [config/ros_controller/](config/ros_controller/). **This file name must match the name of the platform defined in the robile_description package.**
 2. Add the following block of code to the file to create a [joint_state_controller](http://wiki.ros.org/ros_control#Controllers).
