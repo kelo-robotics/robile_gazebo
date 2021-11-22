@@ -1,6 +1,6 @@
 # robile_gazebo
 
-Gazebo simulations for KELO robile robots
+Gazebo simulations for KELO ROBILE robots
 
 ## Installation
 In addition to a few ROS dependencies, this package also depends on the following packages provided by KELO-robotics:
@@ -53,11 +53,11 @@ For example to change the spawn position of the robot to `(2.0, 3.0)`, and disab
 roslaunch robile_gazebo 4_wheel_platform.launch init_pos_x:=2.0 init_pos_y:=3.0 gazebo_gui:=false
 ~~~
 
-## Adding a custom robile platform
+## Adding a custom ROBILE platform
 
-In this section we describe the procedure to simulate custom robile platform configurations.
+In this section we describe the procedure to simulate custom ROBILE platform configurations.
 
-### Step-1: Add a new robile platform definition
+### Step-1: Add a new ROBILE platform definition
 
 Simulating a custom platform, requires defining the robot configuration in a URDF file. This must be done in the [robile_description](https://git.locomotec.com:444/kelo/platforms/robile_description) package and detailed instructions for the same are available [here](https://git.locomotec.com:444/kelo/platforms/robile_description#building-a-custom-robile-platform-configuration).
 
@@ -75,7 +75,7 @@ Lets assume our custom platform config is called `simple_config` (continuing fro
 
     # Velocity Controllers -----------------------------------------
     ~~~
-3. For every `robile_active_wheel` module defined in the platform configuration file `robile_description/robots/simple_config.urdf.xacro`, include the below block of code in the YAML file. Replace the `<ROBILE_MODULE_NAME>` with the actual name defined for the robile module in the URDF file.
+3. For every `robile_active_wheel` module defined in the platform configuration file `robile_description/robots/simple_config.urdf.xacro`, include the below block of code in the YAML file. Replace the `<ROBILE_MODULE_NAME>` with the actual name defined for the ROBILE module in the URDF file.
     ~~~ yaml
     <ROBILE_MODULE_NAME>_left_hub_wheel_controller:
         type: effort_controllers/JointVelocityController

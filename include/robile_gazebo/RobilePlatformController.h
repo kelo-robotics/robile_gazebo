@@ -51,7 +51,7 @@
 
 /**
  * @brief Velocity controller for gazebo simulations of arbitrary
- * robile platform configurations
+ * ROBILE platform configurations
  *
  */
 class RobilePlatformController {
@@ -64,7 +64,7 @@ class RobilePlatformController {
     RobilePlatformController(ros::NodeHandle& nh);
 
     /**
-     * @brief Set the linear and angular velocities for the robile platform
+     * @brief Set the linear and angular velocities for the ROBILE platform
      *
      * @param vx Linear velocity (in m/s) along the positive x axis in robot
      * frame
@@ -76,12 +76,12 @@ class RobilePlatformController {
     void setCmdVel(double vx, double vy, double va);
 
     /**
-     * @brief Set the maximum linear and angular velocities that the robile
+     * @brief Set the maximum linear and angular velocities that the ROBILE
      * platform could achieve. Any commanded velocities above these values will
      * be clipped.
      *
-     * @param linearVel Max linear velocity the robile platform could achieve
-     * @param angularVel Max angular velocity the robile platform could achieve
+     * @param linearVel Max linear velocity the ROBILE platform could achieve
+     * @param angularVel Max angular velocity the ROBILE platform could achieve
      */
     void setMaxPlatformVelocity(double linearVel, double angularVel);
 
@@ -155,7 +155,7 @@ class RobilePlatformController {
     void initDrives(const std::map< std::string, double >& pivotJointData);
 
     /**
-     * @brief Set the Pivot Orientations for every Kelo drive in the robile
+     * @brief Set the Pivot Orientations for every Kelo drive in the ROBILE
      * platform
      *
      * @param pivotJointData Map of Kelo drive name vs the latest pivot
@@ -165,10 +165,10 @@ class RobilePlatformController {
     setPivotOrientations(const std::map< std::string, double >& pivotJointData);
 
     /**
-     * @brief Extract the robile brick name from the pivot joint name
+     * @brief Extract the ROBILE brick name from the pivot joint name
      *
      * @param jointName Joint name of the Kelo drive pivot
-     * @return std::string Name of the robile brick
+     * @return std::string Name of the ROBILE brick
      */
     std::string getRobileBrickName(const std::string& jointName);
 
@@ -179,7 +179,7 @@ class RobilePlatformController {
     ros::NodeHandle& _nh;
 
     /**
-     * @brief A store for kelo drives attached to the robile platform.
+     * @brief A store for kelo drives attached to the ROBILE platform.
      * The key for the store is the name of the kelo drive and the value is the
      * kelo drive object
      * 

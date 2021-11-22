@@ -45,7 +45,7 @@
 
 /**
  * @brief Class to store information about and manage an individual Kelo drive
- * that is part of a robile platform
+ * that is part of a ROBILE platform
  *
  */
 class KeloDrive {

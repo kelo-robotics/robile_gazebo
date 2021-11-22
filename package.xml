@@ -2,7 +2,7 @@
 <package format="2">
     <name>robile_gazebo</name>
     <version>1.0.0</version>
-    <description>Gazebo simulations for KELO robile robots</description>
+    <description>Gazebo simulations for KELO ROBILE robots</description>
 
     <maintainer email="nowak@locomotec.com">Walter Nowak</maintainer>
     <maintainer email="blumenthal@locomotec.com">Sebastian Blumenthal</maintainer>
