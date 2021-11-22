@@ -2,6 +2,8 @@
 
 Gazebo simulations for KELO ROBILE robots
 
+![robile gazebo example](doc/figures/robile_gazebo.png)
+
 ## Installation
 In addition to a few ROS dependencies, this package also depends on the following packages provided by KELO-robotics:
 1. [kelo_tulip](https://github.com/kelo-robotics/kelo_tulip)
