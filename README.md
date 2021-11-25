@@ -12,7 +12,7 @@ In addition to a few ROS dependencies, this package also depends on the followin
 Assuming you have a catkin workspace at `~/catkin_ws`, execute the below commands to install the simulator and its dependencies
 
 ~~~ sh
-sudo apt install ros-$ROS_DISTRO-controller-manager ros-$ROS_DISTRO-effort-controllers ros-$ROS_DISTRO-velocity-controllers ros-$ROS_DISTRO-gazebo-ros ros-$ROS_DISTRO-gazebo-ros-control
+sudo apt install ros-$ROS_DISTRO-controller-manager ros-$ROS_DISTRO-effort-controllers ros-$ROS_DISTRO-velocity-controllers ros-$ROS_DISTRO-joint-state-controller ros-$ROS_DISTRO-gazebo-ros ros-$ROS_DISTRO-gazebo-ros-control
 
 cd ~/catkin_ws/src
 git clone https://github.com/kelo-robotics/kelo_tulip.git
