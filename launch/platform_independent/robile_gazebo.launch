@@ -3,6 +3,7 @@
 <launch>
     <!-- platform_configuration options -->
     <arg name="platform_config"/> <!-- (must be defined in the 'robile_description' ros package) -->
+    <arg name="use_kelo_tulip" default="true"/>
     <arg name="hub_wheel_controller_list"/>
     <arg name="platform_max_lin_vel" default="1.0"/> <!-- in m/s -->
     <arg name="platform_max_ang_vel" default="1.0"/> <!-- in rad/s -->
@@ -34,7 +35,10 @@
     </include>
 
     <!-- launch robot in Gazebo -->
-    <param name="robot_description" command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile.xacro' platform_config:=$(arg platform_config)" />
+    <param if="$(arg use_kelo_tulip)" name="robot_description"
+           command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile.xacro' platform_config:=$(arg platform_config)"/>
+    <param unless="$(arg use_kelo_tulip)" name="robot_description"
+           command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile.xacro' platform_config:=$(arg platform_config) movable_joints:=false"/>
     <node pkg="gazebo_ros" type="spawn_model" name="spawn_robot" respawn="false" output="screen" args="-param robot_description
         -urdf
         -x $(arg init_pos_x)
@@ -49,17 +53,19 @@
         <param name="publish_frequency" type="double" value="30.0" />
     </node>
 
-    <!-- Load joint controller configurations from YAML file to parameter server -->
-    <rosparam file="$(find robile_gazebo)/config/ros_controller/$(arg platform_config).yaml" command="load"/>
+    <group if="$(arg use_kelo_tulip)">
+        <!-- Load joint controller configurations from YAML file to parameter server -->
+        <rosparam file="$(find robile_gazebo)/config/ros_controller/$(arg platform_config).yaml" command="load"/>
 
-    <!-- Start the Gazebo platform controller node -->
-    <param name="platform_max_lin_vel" type="double" value="$(arg platform_max_lin_vel)"/>
-    <param name="platform_max_ang_vel" type="double" value="$(arg platform_max_ang_vel)"/>
-    <node name="robile_gazebo_platform_controller" pkg="robile_gazebo" type="robile_gazebo_platform_controller" />
+        <!-- Start the Gazebo platform controller node -->
+        <param name="platform_max_lin_vel" type="double" value="$(arg platform_max_lin_vel)"/>
+        <param name="platform_max_ang_vel" type="double" value="$(arg platform_max_ang_vel)"/>
+        <node name="robile_gazebo_platform_controller" pkg="robile_gazebo" type="robile_gazebo_platform_controller" />
 
-    <!-- spawn controllers -->
-    <node name="robile_ros_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
-          args="joint_state_controller $(arg hub_wheel_controller_list)" />
+        <!-- spawn controllers -->
+        <node name="robile_ros_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
+            args="joint_state_controller $(arg hub_wheel_controller_list)" />
+    </group>
 
     <!-- (Optional) Start RViz -->
     <node pkg="rviz" type="rviz" name="robile_rviz" args="-d $(arg rviz_config)" if="$(arg start_rviz)"/>

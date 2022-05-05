@@ -46,6 +46,14 @@ angular:
   z: 0.0" -r 10
 ~~~
 
+### Disabling kelo_tulip platform controller
+
+The `kelo_tulip` platform controller requires information about every continuous (or movable) joint in all the connected KELO Drives. Moreover, it sends control data for every hub wheel. This can potentially increase the simulation load on weaker computers. If the goal of simulation is to move the robot around without worrying about the platform controller used, then `kelo_tulip` can be switched off and the more simpler [gazebo_ros_planar_move](https://classic.gazebosim.org/tutorials?tut=ros_gzplugins#PlanarMovePlugin) platform controller can be used. To start the simulation with the `gazebo_ros_planar_move` instead of `kelo_tulip` use the below command:
+
+~~~ sh
+roslaunch robile_gazebo 4_wheel_platform.launch use_kelo_tulip:=false
+~~~
+
 ### Moving the robot using a keyboard
 
 The [teleop_twist_keyboard](http://wiki.ros.org/teleop_twist_keyboard) ROS package can be used to simplify controlling the motion of the robot. This requires a one time installation of the `teleop_twist_keyboard` package using the below command:
@@ -189,7 +197,11 @@ A platform specific launch file can be defined as follows:
     ~~~ xml
     <arg name="platform_config" value="simple_config"/>
     ~~~
-4. Finally list all the hub wheel controller names defined in the `config/ros_controller/simple_config.yaml` file as follows:
+4. Add an argument to specify if `kelo_tulip` must be used as the platform controller by default. If this is set to false, all the wheel and pivot joints will be treated as fixed and the `gazebo_ros_planar_move` plugin will be used as the platform controller.
+    ~~~ xml
+    <arg name="use_kelo_tulip" default="true"/>
+    ~~~
+5. Finally list all the hub wheel controller names defined in the `config/ros_controller/simple_config.yaml` file as follows:
     ~~~ xml
     <arg name="hub_wheel_controller_list" 
          value="robile_3_left_hub_wheel_controller
@@ -197,7 +209,7 @@ A platform specific launch file can be defined as follows:
                 robile_4_left_hub_wheel_controller
                 robile_4_right_hub_wheel_controller" />
     ~~~
-5. The complete ros launch file should look something like the one shown below:
+6. The complete ros launch file should look something like the one shown below:
     ~~~ xml
     <?xml version="1.0"?>
     <launch>
@@ -205,6 +217,7 @@ A platform specific launch file can be defined as follows:
             Platform specific arguments must be defined here
         -->
         <arg name="platform_config" value="simple_config"/>
+        <arg name="use_kelo_tulip" default="true"/>
         <arg name="hub_wheel_controller_list" 
              value="robile_3_left_hub_wheel_controller
                     robile_3_right_hub_wheel_controller
