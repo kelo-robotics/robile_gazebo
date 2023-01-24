@@ -54,6 +54,29 @@ The `kelo_tulip` platform controller requires information about every continuous
 roslaunch robile_gazebo 4_wheel_platform.launch use_kelo_tulip:=false
 ~~~
 
+### Adding laser scanner to URDF
+
+You can add a laser scanner to the root by editing the  robile description and addting the following lines, for example in the robile_gaebo.xacro file
+~~~ xacro
+
+    <!-- sensors -->
+    <xacro:include filename="$(find robile_description)/urdf/sensors/hokuyo_urg04_laser.urdf.xacro"/>
+
+    <!-- base laser front -->
+    <xacro:hokuyo_urg04_laser name="base_laser_front" parent="base" ros_topic="scan_front" update_rate="10" min_angle="-1.57" max_angle="1.57">
+    <origin xyz="0.3 0 0.3" rpy="0 0 0"/>
+    </xacro:hokuyo_urg04_laser>
+
+~~~
+
+You also need to install the gazebo package to simulate the laser scanner 
+
+~~~ sh
+sudo apt install ros-$ROS_DISTRO-gazebo-ros-pkgs
+~~~
+
+Now if you launch you will have an additional topic ```/scan_front``` in rostopic list.
+
 ### Moving the robot using a keyboard
 
 The [teleop_twist_keyboard](http://wiki.ros.org/teleop_twist_keyboard) ROS package can be used to simplify controlling the motion of the robot. This requires a one time installation of the `teleop_twist_keyboard` package using the below command:
