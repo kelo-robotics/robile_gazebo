@@ -21,13 +21,15 @@
     <arg name="headless" default="true"/>
     <arg name="debug" default="false"/>
     <arg name="paused" default="false"/>
+    <arg name="world_name" default="willowgarage.world"/>
 
     <!-- RViz startup options -->
     <arg name="start_rviz" default="true"/>
     <arg name="rviz_config" default="$(find robile_gazebo)/config/rviz/robile.rviz"/>
 
     <!-- launch gazebo with empty world -->
-    <include file="$(find gazebo_ros)/launch/willowgarage_world.launch">
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="worlds/$(arg world_name)"/>
         <arg name="paused" value="$(arg paused)"/>
         <arg name="use_sim_time" value="$(arg use_sim_time)"/>
         <arg name="gui" value="$(arg gazebo_gui)"/>
