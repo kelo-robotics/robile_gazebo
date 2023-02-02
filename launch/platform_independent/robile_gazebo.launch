@@ -21,41 +21,41 @@
 
     <group ns="$(arg robot_name_1)">
     <!-- launch robot in Gazebo -->
-    <param if="$(arg use_kelo_tulip)" name="robot_description"
-           command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile_laser_scanner.xacro' platform_config:=$(arg platform_config)"/>
-    <param unless="$(arg use_kelo_tulip)" name="robot_description"
-           command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile_laser_scanner.xacro' platform_config:=$(arg platform_config) movable_joints:=false"/>
-    <node pkg="gazebo_ros" type="spawn_model" name="spawn_robot" respawn="false" output="screen" args="-param robot_description
-        -urdf
-        -x $(arg init_pos_x)
-        -y $(arg init_pos_y)
-        -z $(arg init_pos_z)
-        -Y $(arg init_yaw)
-        -model $(arg robot_name_1)">
-    </node>
+        <param if="$(arg use_kelo_tulip)" name="robot_description"
+            command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile_laser_scanner.xacro' platform_config:=$(arg platform_config)"/>
+        <param unless="$(arg use_kelo_tulip)" name="robot_description"
+            command="$(find xacro)/xacro '$(find robile_description)/gazebo/gazebo_robile_laser_scanner.xacro' platform_config:=$(arg platform_config) movable_joints:=false"/>
+        <node pkg="gazebo_ros" type="spawn_model" name="spawn_robot" respawn="false" output="screen" args="-param robot_description
+            -urdf
+            -x $(arg init_pos_x)
+            -y $(arg init_pos_y)
+            -z $(arg init_pos_z)
+            -Y $(arg init_yaw)
+            -model $(arg robot_name_1)">
+        </node>
 
-    <!-- Start the robot state publisher node to publish information of fixed joints -->
-    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
-        <param name="publish_frequency" type="double" value="30.0" />
-    </node>
+        <!-- Start the robot state publisher node to publish information of fixed joints -->
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+            <param name="publish_frequency" type="double" value="30.0" />
+        </node>
 
-    <!-- (Optional) Start RViz -->
-    <node pkg="rviz" type="rviz" name="robile_rviz" args="-d $(arg rviz_config)" if="$(arg start_rviz)"/>
-    </group>	
+        <!-- (Optional) Start RViz -->
+        <node pkg="rviz" type="rviz" name="robile_rviz" args="-d $(arg rviz_config)" if="$(arg start_rviz)"/>
+        
+        <group if="$(arg use_kelo_tulip)">
+            <!-- Load joint controller configurations from YAML file to parameter server -->
+            <rosparam file="$(find robile_gazebo)/config/ros_controller/$(arg platform_config).yaml" command="load"/>
 
-    <group if="$(arg use_kelo_tulip)">
-        <!-- Load joint controller configurations from YAML file to parameter server -->
-        <rosparam file="$(find robile_gazebo)/config/ros_controller/$(arg platform_config).yaml" command="load"/>
+            <!-- Start the Gazebo platform controller node -->
+            <param name="platform_max_lin_vel" type="double" value="$(arg platform_max_lin_vel)"/>
+            <param name="platform_max_ang_vel" type="double" value="$(arg platform_max_ang_vel)"/>
+                
+            <node name="robile_gazebo_platform_controller" pkg="robile_gazebo" type="robile_gazebo_platform_controller" />
 
-        <!-- Start the Gazebo platform controller node -->
-        <param name="platform_max_lin_vel" type="double" value="$(arg platform_max_lin_vel)"/>
-        <param name="platform_max_ang_vel" type="double" value="$(arg platform_max_ang_vel)"/>
-        <node name="robile_gazebo_platform_controller" pkg="robile_gazebo" type="robile_gazebo_platform_controller" />
-
-        <!-- spawn controllers -->
-        <node name="robile_ros_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
+            <!-- spawn controllers -->
+            <node name="robile_ros_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
             args="joint_state_controller $(arg hub_wheel_controller_list)" />
-    </group>
-
+        </group>
+    </group>	
 
 </launch>
