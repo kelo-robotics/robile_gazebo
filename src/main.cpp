@@ -54,7 +54,7 @@ void cmdVelCallBack(const geometry_msgs::Twist& msg) {
 
 void joyCallback(const sensor_msgs::Joy& joy) {
     if (platformController) {
-        platformController->setCmdVel(joy.axes[0], joy.axes[1], joy.axes[2]);
+        platformController->setCmdVel(joy.axes[1], joy.axes[0], joy.axes[2]);
     }
 }
 

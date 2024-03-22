@@ -69,7 +69,8 @@ void RobilePlatformController::setCmdVel(double vx, double vy, double va) {
 }
 
 void RobilePlatformController::setMaxPlatformVelocity(double linearVel, double angularVel) {
-    _controller.setPlatformMaxVelocity(linearVel, angularVel);
+    _controller.setPlatformMaxLinVelocity(linearVel);
+    _controller.setPlatformMaxAngVelocity(angularVel);
 }
 
 void RobilePlatformController::publishPivotMarkers() const {
