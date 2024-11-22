@@ -184,9 +184,23 @@ void RobilePlatformController::gazeboLinkStatesCallBack(const gazebo_msgs::LinkS
 
     for (size_t i = 0; i < linkNames.size(); ++i) {
         std::string name = linkNames[i];
-        if (name.find("base_link") != std::string::npos) {
+        if (name.find("robile::base_link") != std::string::npos) {
             _odomMsg.pose.pose = linkPoses[i];
-            _odomMsg.twist.twist = linkTwist[i];
+            //_odomMsg.twist.twist = linkTwist[i];
+            double vx = linkTwist[i].linear.x;
+            double vy = linkTwist[i].linear.y;
+            double va = linkTwist[i].angular.z;
+            double qw = linkPoses[i].orientation.w;
+            double qx = linkPoses[i].orientation.x;
+            double qy = linkPoses[i].orientation.y;
+            double qz = linkPoses[i].orientation.z;
+            double theta = atan2(2*(qw*qz + qx*qy), 1 - 2*(qy*qy + qz*qz));
+            _odomMsg.twist.twist.linear.x = vx * cos(theta) + vy * sin(theta);
+            _odomMsg.twist.twist.linear.y = vx * sin(theta) - vy * cos(theta);
+            _odomMsg.twist.twist.linear.z = 0;
+            _odomMsg.twist.twist.angular.x = 0;
+            _odomMsg.twist.twist.angular.y = 0;
+            _odomMsg.twist.twist.angular.z = va;
             break;
         }
     }
@@ -211,7 +225,6 @@ std::string RobilePlatformController::getRobileBrickName(const std::string& join
 void RobilePlatformController::publishOdom() {
     ros::Time now = ros::Time::now();
     if (_initialized &&
-        _odomPublisher.getNumSubscribers() > 0 &&
         now - _lastOdomPubTime >= _odomDuration) {
         _odomMsg.header.stamp = now;
         _odomMsg.header.frame_id = "odom";
