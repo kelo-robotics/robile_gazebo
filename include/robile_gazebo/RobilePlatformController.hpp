@@ -6,6 +6,9 @@
  * Sushant Chavan
  * Walter Nowak
  *
+ * Maintainer:
+ * Chaitanya Gumudala
+ *
  *
  * This software is published under a dual-license: GNU Lesser General Public
  * License LGPL 2.1 and BSD license. The dual-license implies that users of this
@@ -42,36 +45,30 @@
 #define ROBILE_PLATFORM_CONTROLLER_H
 
 #include "kelo_tulip/VelocityPlatformController.h"
-#include <gazebo_msgs/LinkStates.h>
-#include <nav_msgs/Odometry.h>
-#include <sensor_msgs/JointState.h>
-#include <tf/transform_listener.h>
+#include "nav_msgs/msg/odometry.hpp"
+#include "robile_gazebo/KeloDrive.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/transform_listener.h"
+#include "visualization_msgs/msg/marker_array.hpp"
 
-#include "KeloDrive.h"
-
-/**
- * @brief Velocity controller for gazebo simulations of arbitrary
- * ROBILE platform configurations
- *
- */
 class RobilePlatformController {
   public:
+
     /**
      * @brief Construct a new Robile Platform Controller object
      *
      * @param nh Node handle for the ros node managing the platform controller
      */
-    RobilePlatformController(ros::NodeHandle& nh);
+    RobilePlatformController(rclcpp::Node::SharedPtr nh);
 
     /**
      * @brief Set the linear and angular velocities for the ROBILE platform
      *
-     * @param vx Linear velocity (in m/s) along the positive x axis in robot
-     * frame
-     * @param vy Linear velocity (in m/s) along the positive y axis in robot
-     * frame
-     * @param va Angular velocity in (rad/s) around the positive z axis in robot
-     * frame
+     * @param vx Linear velocity (in m/s) along the positive x axis in robot frame
+     * @param vy Linear velocity (in m/s) along the positive y axis in robot frame
+     * @param va Angular velocity in (rad/s) around the positive z axis in robot frame
      */
     void setCmdVel(double vx, double vy, double va);
 
@@ -88,13 +85,11 @@ class RobilePlatformController {
     /**
      * @brief Controller step which computes and sets the desired hub wheel
      * velocities to each hub wheel based on the commanded platform velocity
-     *
      */
     void step();
 
     /**
      * @brief Publish RViz markers for each active wheel's pivot pose
-     *
      */
     void publishPivotMarkers() const;
 
@@ -102,29 +97,25 @@ class RobilePlatformController {
      * @brief Set the frequency at which odometry messages are published. The
      * frequency must be less that or equal to the controller's frequency.
      *
-     * @param frequency Frequency (in Hz) at which odometry messages should be
-     * published
+     * @param frequency Frequency (in Hz) at which odometry messages should be published
      */
     void setOdomFrequency(double frequency);
 
     /**
      * @brief Publish the latest odometry received from Gazebo on '/odom' topic
-     *
      */
-    void publishOdom();
+
+    void odomCallBack(const nav_msgs::msg::Odometry::SharedPtr msg);
 
     /**
-     * @brief Publish the latest transfrom from odom to base_link on the '/tf'
-     * topic
-     *
+     * @brief Publish the latest transfrom from odom to base_link on the '/tf' topic
      */
     void publishOdomToBaseLinkTF();
 
-  protected:
+protected:
+
     /**
-     * @brief Callback function to receive and process the robot joint states
-     * from Gazebo.
-     *
+     * @brief Callback function to receive and process the robot joint states from Gazebo.
      * The first message is used to get the positions of all Kelo drives
      * attached to the platform and initialize the Velocity controller from
      * kelo_tulip. The next messages are used to store the latest pivot
@@ -132,37 +123,21 @@ class RobilePlatformController {
      *
      * @param msg Ros message from Gazebo with the Joint state information
      */
-    void jointStatesCallBack(const sensor_msgs::JointState& msg);
+    void jointStatesCallBack(const sensor_msgs::msg::JointState::SharedPtr msg);
 
     /**
-     * @brief Callback function to receive and process the robot link states
-     * from Gazebo
+     * @brief Intialize the Kelo drive data structures and the Velocity controller from kelo_tulip
      *
-     * The base_link pose and twist published by Gazebo is stored and used to
-     * construct the odometry message.
-     *
-     * @param msg Ros message from Gazebo with the Link state information
+     * @param pivotJointData Map of Kelo drive name vs its latest pivot orientation
      */
-    void gazeboLinkStatesCallBack(const gazebo_msgs::LinkStates& msg);
+    void initDrives(const std::map<std::string, double> &pivotJointData);
 
     /**
-     * @brief Intialize the Kelo drive data structures and the Velocity
-     * controller from kelo_tulip
+     * @brief Set the Pivot Orientations for every Kelo drive in the ROBILE platform
      *
-     * @param pivotJointData Map of Kelo drive name vs its latest pivot
-     * orientation
+     * @param pivotJointData Map of Kelo drive name vs the latest pivot orientation
      */
-    void initDrives(const std::map< std::string, double >& pivotJointData);
-
-    /**
-     * @brief Set the Pivot Orientations for every Kelo drive in the ROBILE
-     * platform
-     *
-     * @param pivotJointData Map of Kelo drive name vs the latest pivot
-     * orientation
-     */
-    void
-    setPivotOrientations(const std::map< std::string, double >& pivotJointData);
+    void setPivotOrientations(const std::map<std::string, double> &pivotJointData);
 
     /**
      * @brief Extract the ROBILE brick name from the pivot joint name
@@ -170,122 +145,119 @@ class RobilePlatformController {
      * @param jointName Joint name of the Kelo drive pivot
      * @return std::string Name of the ROBILE brick
      */
-    std::string getRobileBrickName(const std::string& jointName);
+    std::string getRobileBrickName(const std::string &jointName);
 
     /**
      * @brief Node handle for the ros node managing the platform controller
-     * 
      */
-    ros::NodeHandle& _nh;
+    rclcpp::Node::SharedPtr _nh;
 
     /**
      * @brief A store for kelo drives attached to the ROBILE platform.
      * The key for the store is the name of the kelo drive and the value is the
      * kelo drive object
-     * 
      */
-    std::map< std::string, KeloDrive > _drives;
+    std::map<std::string, KeloDrive> _drives;
 
     /**
-     * @brief Flag to indicate if the platform has been successfully initialized
-     * and is ready for operation
-     * 
+     * @brief Flag to indicate if the platform has been successfully initialized and is ready for operation
      */
     bool _initialized;
 
     /**
-     * @brief A TransformListener object to receive the latest transforms
-     * between the robot links
-     * 
+     * @brief A shared pointer to the tf2 buffer used to store and manage transforms
      */
-    tf::TransformListener _tfListener;
+    std::shared_ptr<tf2_ros::Buffer> _tfBuffer;
 
     /**
-     * @brief A ROS subscriber to receive Joint state information of all
-     * robot joints
-     * 
+     * @brief A shared pointer to the tf2 transform listener used to listen for transforms from Gazebo
      */
-    ros::Subscriber _jointStatesSubscriber;
+    std::shared_ptr<tf2_ros::TransformListener> _tfListener;
 
     /**
-     * @brief A ROS subscriber to receive Link state information of all
-     * robot links from Gazebo
-     * 
+     * @brief A shared pointer to the tf2 transform broadcaster used to publish transforms to ROS
      */
-    ros::Subscriber _gazeboLinkStatesSubscriber;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> _tfBroadcaster;
 
     /**
-     * @brief A ROS publisher to publish the platform odometry information
-     * 
+     * @brief A ROS subscriber to receive Joint state information of all robot joints
+     *
      */
-    ros::Publisher _odomPublisher;
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr _jointStatesSub;
 
     /**
-     * @brief A ROS publisher to publish the transform from odom to base_link 
-     * frames
-     * 
+     * @brief A ROS subscriber to receive Odometry information from Gazebo
+     *
      */
-    ros::Publisher _odomTFPublisher;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odomSub;
+
+    /**
+     * @brief A ROS publisher to publish the desired wheel velocities to all wheels
+     *
+     */
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _hubWheelsPublisher;
+
+    /**
+     * @brief A ROS publisher to publish the transform from odom to base_link frames
+     *
+     */
+    rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr _odomTFPublisher;
 
     /**
      * @brief A ROS publisher to publish RViz markers representing the pivot
      * poses of every kelo drive attached to the platform
-     * 
+     *
      */
-    ros::Publisher _pivotMarkersPublisher;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _pivotMarkersPublisher;
 
     /**
      * @brief The desired linear platform velocity along the x-axis of base_link
-     * 
+     *
      */
     double _cmdVelX;
 
     /**
      * @brief The desired linear platform velocity along the y-axis of base_link
-     * 
+     *
      */
     double _cmdVelY;
 
     /**
-     * @brief The desired angular platform velocity around the z-axis of 
-     * base_link
-     * 
+     * @brief The desired angular platform velocity around the z-axis of base_link
+     *
      */
     double _cmdVelA;
 
     /**
-     * @brief A ROS odometry message with the latest odometry information that
-     * can be published
-     * 
+     * @brief A ROS odometry message with the latest odometry information that can be published
+     *
      */
-    nav_msgs::Odometry _odomMsg;
+    nav_msgs::msg::Odometry _odomMsg;
 
     /**
-     * @brief Minimum time duration between two consecutive odometry messages 
+     * @brief Minimum time duration between two consecutive odometry messages
      * being published. This is set based on the desired odom publish frequency
-     * 
+     *
      */
-    ros::Duration _odomDuration;
+    rclcpp::Duration _odomDuration;
 
     /**
      * @brief Time at which the last odom message was published
-     * 
+     *
      */
-    ros::Time _lastOdomPubTime;
+    rclcpp::Time _lastOdomPublishTime;
 
     /**
      * @brief Velocity platform controller to convert platform velocity to each
      * individual hub wheel velocities
-     * 
+     *
      */
     kelo::VelocityPlatformController _controller;
 
     /**
-     * @brief Store of Wheel configuration required by the Velocity platform 
-     * controller
-     * 
+     * @brief Store of Wheel configuration required by the Velocity platform controller
+     *
      */
-    std::map< std::string, kelo::WheelConfig > _wheelConfigs;
+    std::map<std::string, kelo::WheelConfig> _wheelConfigs;
 };
-
 #endif // ROBILE_PLATFORM_CONTROLLER_H

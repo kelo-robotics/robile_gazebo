@@ -38,27 +38,24 @@
  *
  ******************************************************************************/
 
-#include <sensor_msgs/JointState.h>
-#include <tf2_msgs/TFMessage.h>
-#include <visualization_msgs/MarkerArray.h>
+#include "robile_gazebo/RobilePlatformController.hpp"
 
-#include "robile_gazebo/RobilePlatformController.h"
-
-RobilePlatformController::RobilePlatformController(ros::NodeHandle& nh):
-_nh(nh),
-_cmdVelX(0.0),
-_cmdVelY(0.0),
+RobilePlatformController::RobilePlatformController(rclcpp::Node::SharedPtr nh) : 
+_nh(nh), 
+_drives(), 
+_initialized(false),
+_tfBuffer(std::make_shared<tf2_ros::Buffer>(nh->get_clock())),
+_tfListener(std::make_shared<tf2_ros::TransformListener>(*_tfBuffer)),
+_cmdVelX(0.0), 
+_cmdVelY(0.0), 
 _cmdVelA(0.0),
-_initialized(false) {
-    // Setup subscribers
-    _jointStatesSubscriber = _nh.subscribe("/joint_states", 1, &RobilePlatformController::jointStatesCallBack, this);
-    _gazeboLinkStatesSubscriber = _nh.subscribe("/gazebo/link_states", 1, &RobilePlatformController::gazeboLinkStatesCallBack, this);
-
-    // Setup publishers
-    _odomPublisher = _nh.advertise<nav_msgs::Odometry>("/odom", 1);
-    _odomTFPublisher = _nh.advertise<tf2_msgs::TFMessage>("/tf", 1);
-    _pivotMarkersPublisher = _nh.advertise<visualization_msgs::MarkerArray>("/pivot_markers", 1);
-
+_odomDuration(rclcpp::Duration::from_seconds(1.0)) 
+{
+    _jointStatesSub = nh->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 1, std::bind(&RobilePlatformController::jointStatesCallBack, this, std::placeholders::_1));
+    _odomSub = nh->create_subscription<nav_msgs::msg::Odometry>("/odom", 1, std::bind(&RobilePlatformController::odomCallBack, this, std::placeholders::_1));
+    _tfBroadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(nh);
+    _pivotMarkersPublisher = nh->create_publisher<visualization_msgs::msg::MarkerArray>("/pivot_markers", 1);
+    _hubWheelsPublisher = nh->create_publisher<std_msgs::msg::Float64MultiArray>("robile_hub_wheels_controller/commands", 1);
     setOdomFrequency(10.0);
 }
 
@@ -74,102 +71,100 @@ void RobilePlatformController::setMaxPlatformVelocity(double linearVel, double a
 }
 
 void RobilePlatformController::publishPivotMarkers() const {
-    if (_pivotMarkersPublisher.getNumSubscribers() > 0) {
-        visualization_msgs::MarkerArray markerArray;
+    if (_pivotMarkersPublisher->get_subscription_count() > 0) {
+        visualization_msgs::msg::MarkerArray markerArray;
         int markerId = 0;
-        for (const auto& drive: _drives) {
-            visualization_msgs::Marker marker = drive.second.getPivotMarker();
+        for (const auto &drive : _drives) {
+            visualization_msgs::msg::Marker marker = drive.second.getPivotMarker();
+            marker.header.frame_id = "base_link";
+            marker.header.stamp = _nh->now();
             marker.id = markerId++;
             markerArray.markers.push_back(marker);
         }
-        _pivotMarkersPublisher.publish(markerArray);
+        _pivotMarkersPublisher->publish(markerArray);
     }
 }
 
 void RobilePlatformController::setOdomFrequency(double frequency) {
-    _odomDuration = ros::Duration(1.0/frequency);
+    _odomDuration = rclcpp::Duration::from_seconds(1.0 / frequency);
 }
 
 void RobilePlatformController::step() {
     if (_initialized) {
         _controller.setPlatformTargetVelocity(_cmdVelX, _cmdVelY, _cmdVelA);
         _controller.calculatePlatformRampedVelocities();
+        std::vector<double> allWheelVelocities;
 
-        for (const auto& drive: _drives) {
-            const std::string& driveName = drive.first;
+        for (const auto &drive : _drives) {
+            const std::string &driveName = drive.first;
             int wheelNumber = _wheelConfigs[driveName].ethercatNumber;
             float setpoint1, setpoint2;
-            _controller.calculateWheelTargetVelocity(wheelNumber, drive.second.getPivotOrientation(), setpoint1, setpoint2);
-            _drives.at(driveName).setHubWheelVelocities(setpoint1, setpoint2);
+            _controller.calculateWheelTargetVelocity(
+            wheelNumber, drive.second.getPivotOrientation(), setpoint1, setpoint2);
+            allWheelVelocities.push_back(-setpoint1);
+            allWheelVelocities.push_back(-setpoint2);
         }
-    }
+        std_msgs::msg::Float64MultiArray msg;
+        msg.data = allWheelVelocities;
+        _hubWheelsPublisher->publish(msg);
+  }
 }
 
-void  RobilePlatformController::initDrives(const std::map<std::string, double>& pivotJointData) {
+void RobilePlatformController::initDrives(const std::map<std::string, double> &pivotJointData) {
     if (!_drives.empty())
-        return;
+    return;
 
-    // Find the Kelo drive pose and name for every drive attached to the 
-    // platform and setup the corresponding KeloDrive objects to manage them
-    ros::Time now = ros::Time::now();
-    for (auto& joint: pivotJointData) {
+    rclcpp::Time now = rclcpp::Clock().now();
+    for (auto &joint : pivotJointData) {
         std::string driveName = getRobileBrickName(joint.first);
-        std::string pivotLink = std::string("/") + driveName + std::string("_drive_pivot_link");
-        if (!_tfListener.waitForTransform("/base_link", pivotLink, now, ros::Duration(2.0))) {
-            ROS_WARN("Did not receive transform from /base_link to %s", pivotLink.c_str());
+        std::string pivotLink = driveName + std::string("_drive_pivot_link");
+        RCLCPP_INFO(_nh->get_logger(), "Checking transform for: %s", pivotLink.c_str());
+        RCLCPP_INFO(_nh->get_logger(), "Transform OK for drive: %s", driveName.c_str());
+        if (!_tfBuffer->canTransform("base_link", pivotLink, rclcpp::Time(0), rclcpp::Duration(std::chrono::seconds(2)))) {
+            RCLCPP_WARN(_nh->get_logger(), "Did not receive transform from base_link to %s", pivotLink.c_str());
             _drives.clear();
             return;
         }
-        tf::StampedTransform transform;
-        _tfListener.lookupTransform("/base_link", pivotLink, now, transform);
-
-        _drives.insert(std::make_pair(driveName,
-                                      KeloDrive(_nh,
-                                                driveName, 
-                                                transform.getOrigin().x(), 
-                                                transform.getOrigin().y(), 
-                                                transform.getOrigin().z(),
-                                                joint.second)));
+        geometry_msgs::msg::TransformStamped transform;
+        transform = _tfBuffer->lookupTransform("base_link", pivotLink, rclcpp::Time(0));
+        _drives.insert(std::make_pair(driveName, KeloDrive(driveName, transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z, joint.second)));
     }
-
-    // init controller
     std::vector<kelo::WheelConfig> wheelConfigsVector;
     int wheelNumber = 0;
     double zDummy = 0;
-    for (const auto& drive: _drives) {
+    for (const auto &drive : _drives) {
         kelo::WheelConfig wc;
-        wc.ethercatNumber = wheelNumber; // to associate between wheel name used in simulation and number used in controller
+        wc.ethercatNumber = wheelNumber;
         drive.second.getPos(wc.x, wc.y, zDummy);
-        wc.a = 0; // assume zero in simulation
+        wc.a = 0;
         _wheelConfigs[drive.first] = wc;
         wheelConfigsVector.push_back(wc);
         wheelNumber++;
     }
-    _controller.initialise(wheelConfigsVector);
 
+    _controller.initialise(wheelConfigsVector);
     _initialized = true;
-    ROS_INFO("Initialized %lu Kelo drives", _drives.size());
+    RCLCPP_INFO(_nh->get_logger(), "Initialized %lu Kelo drives", _drives.size());
 }
 
-void RobilePlatformController::jointStatesCallBack(const sensor_msgs::JointState& msg) {
-    const std::vector<std::string>& jointNames = msg.name;
-    const std::vector<double>& jointPositions = msg.position;
+void RobilePlatformController::jointStatesCallBack(const sensor_msgs::msg::JointState::SharedPtr msg) {
+    const std::vector<std::string> &jointNames = msg->name;
+    const std::vector<double> &jointPositions = msg->position;
 
     if (jointNames.empty() || jointNames.size() != jointPositions.size()) {
         return;
     }
 
     std::map<std::string, double> pivotJointData;
-    std::string pivotJointNameIdentifier = "pivot_joint";
+    std::string pivotJointNameIdentifier = "drive_pivot_joint";
+
     for (size_t i = 0; i < jointNames.size(); ++i) {
         std::string jointName = jointNames[i];
         if (jointName.find(pivotJointNameIdentifier) != std::string::npos) {
-            // Normalize the pivot angle in range [0, 2*PI]
-            double pivotAngle = jointPositions[i] - (int(jointPositions[i] / (2*M_PI)) * 2 * M_PI);
+            double pivotAngle = jointPositions[i] - (int(jointPositions[i] / (2 * M_PI)) * 2 * M_PI);
             pivotJointData[jointName] = pivotAngle;
         }
     }
-
     if (_drives.empty()) {
         initDrives(pivotJointData);
     } else {
@@ -177,76 +172,38 @@ void RobilePlatformController::jointStatesCallBack(const sensor_msgs::JointState
     }
 }
 
-void RobilePlatformController::gazeboLinkStatesCallBack(const gazebo_msgs::LinkStates& msg) {
-    const std::vector<std::string>& linkNames = msg.name;
-    const std::vector<geometry_msgs::Pose>& linkPoses = msg.pose;
-    const std::vector<geometry_msgs::Twist>& linkTwist = msg.twist;
-
-    for (size_t i = 0; i < linkNames.size(); ++i) {
-        std::string name = linkNames[i];
-        if (name.find("robile::base_link") != std::string::npos) {
-            _odomMsg.pose.pose = linkPoses[i];
-            //_odomMsg.twist.twist = linkTwist[i];
-            double vx = linkTwist[i].linear.x;
-            double vy = linkTwist[i].linear.y;
-            double va = linkTwist[i].angular.z;
-            double qw = linkPoses[i].orientation.w;
-            double qx = linkPoses[i].orientation.x;
-            double qy = linkPoses[i].orientation.y;
-            double qz = linkPoses[i].orientation.z;
-            double theta = atan2(2*(qw*qz + qx*qy), 1 - 2*(qy*qy + qz*qz));
-            _odomMsg.twist.twist.linear.x = vx * cos(theta) + vy * sin(theta);
-            _odomMsg.twist.twist.linear.y = vx * sin(theta) - vy * cos(theta);
-            _odomMsg.twist.twist.linear.z = 0;
-            _odomMsg.twist.twist.angular.x = 0;
-            _odomMsg.twist.twist.angular.y = 0;
-            _odomMsg.twist.twist.angular.z = va;
-            break;
-        }
-    }
-}
-
-void RobilePlatformController::setPivotOrientations(const std::map<std::string, double>& pivotJointData) {
-    for (const auto& joint: pivotJointData) {
+void RobilePlatformController::setPivotOrientations(const std::map<std::string, double> &pivotJointData) {
+    for (const auto &joint : pivotJointData) {
         std::string driveName = getRobileBrickName(joint.first);
         if (_drives.find(driveName) == _drives.end()) {
-            ROS_ERROR("Cannot set pivot orientation for drive %s", driveName.c_str());
+            RCLCPP_ERROR(_nh->get_logger(), "Cannot set pivot orientation for drive %s", driveName.c_str());
             continue;
         }
-        KeloDrive& drive = _drives.at(driveName);
+        KeloDrive &drive = _drives.at(driveName);
         drive.setPivotOrientation(joint.second);
     }
 }
 
-std::string RobilePlatformController::getRobileBrickName(const std::string& jointName) {
+std::string RobilePlatformController::getRobileBrickName(const std::string &jointName) {
     return jointName.substr(0, jointName.find("_drive_"));
 }
 
-void RobilePlatformController::publishOdom() {
-    ros::Time now = ros::Time::now();
-    if (_initialized &&
-        now - _lastOdomPubTime >= _odomDuration) {
-        _odomMsg.header.stamp = now;
-        _odomMsg.header.frame_id = "odom";
-        _odomMsg.child_frame_id = "base_link";
-        _odomPublisher.publish(_odomMsg);
-        _lastOdomPubTime = now;
-    }
+void RobilePlatformController::odomCallBack(const nav_msgs::msg::Odometry::SharedPtr msg) {
+    _odomMsg = *msg;
 }
 
 void RobilePlatformController::publishOdomToBaseLinkTF() {
     if (_initialized) {
-        tf2_msgs::TFMessage tfMsg;
-        geometry_msgs::TransformStamped transform;
+        tf2_msgs::msg::TFMessage tfMsg;
+        geometry_msgs::msg::TransformStamped transform;
         transform.header.frame_id = "odom";
-        transform.header.stamp = ros::Time::now();
+        transform.header.stamp = _nh->now();
         transform.child_frame_id = "base_link";
         transform.transform.translation.x = _odomMsg.pose.pose.position.x;
         transform.transform.translation.y = _odomMsg.pose.pose.position.y;
         transform.transform.translation.z = _odomMsg.pose.pose.position.z;
         transform.transform.rotation = _odomMsg.pose.pose.orientation;
         tfMsg.transforms.push_back(transform);
-
-        _odomTFPublisher.publish(tfMsg);
+        _tfBroadcaster->sendTransform(transform);
     }
 }

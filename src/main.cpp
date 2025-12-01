@@ -6,6 +6,8 @@
  * Sushant Chavan
  * Walter Nowak
  *
+ * Maintainer:
+ * Chaitanya Gumudala
  *
  * This software is published under a dual-license: GNU Lesser General Public
  * License LGPL 2.1 and BSD license. The dual-license implies that users of this
@@ -38,57 +40,63 @@
  *
  ******************************************************************************/
 
-#include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/Joy.h>
+#include "geometry_msgs/msg/twist.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "robile_gazebo/RobilePlatformController.hpp"
+#include "sensor_msgs/msg/joy.hpp"
 
-#include "robile_gazebo/RobilePlatformController.h"
+std::shared_ptr<RobilePlatformController> platformController;
 
-RobilePlatformController* platformController;
-
-void cmdVelCallBack(const geometry_msgs::Twist& msg) {
+void cmdVelCallback(const geometry_msgs::msg::Twist &msg) {
     if (platformController) {
         platformController->setCmdVel(msg.linear.x, msg.linear.y, msg.angular.z);
     }
 }
 
-void joyCallback(const sensor_msgs::Joy& joy) {
+void joyCallback(const sensor_msgs::msg::Joy &joy) {
     if (platformController) {
-        platformController->setCmdVel(joy.axes[1], joy.axes[0], joy.axes[2]);
+        platformController->setCmdVel(joy.axes[1], joy.axes[0], joy.axes[3]);
     }
 }
 
-int main(int argc, char** argv) {
-    ros::init(argc, argv, "robile_gazebo_controller");
-    ros::NodeHandle nh;
-    ros::Subscriber cmdVelSubscriber = nh.subscribe("/cmd_vel", 10, cmdVelCallBack);
-    ros::Subscriber joySubscriber = nh.subscribe("/joy", 1000, joyCallback);
+int main(int argc, char **argv) {
+    rclcpp::init(argc, argv);
+    rclcpp::NodeOptions options;
+    options.parameter_overrides({{"use_sim_time", true}});
 
-    // Load max linear velocity
+    rclcpp::Node::SharedPtr nh = std::make_shared<rclcpp::Node>("robile_gazebo_platform_controller", options);
+
+    auto cmdVelSubscriber = nh->create_subscription<geometry_msgs::msg::Twist>("/cmd_vel", 10, cmdVelCallback);
+
+    auto joySubscriber = nh->create_subscription<sensor_msgs::msg::Joy>("/joy", 1000, joyCallback);
+
     double platformMaxLinVel;
-    if (!ros::param::get("/platform_max_lin_vel", platformMaxLinVel)) {
+    if (!nh->has_parameter("platform_max_lin_vel")) {
         platformMaxLinVel = 1.0;
+    } else {
+        nh->get_parameter("platform_max_lin_vel", platformMaxLinVel);
     }
 
-    // Load max angular velocity
     double platformMaxAngVel;
-    if (!ros::param::get("/platform_max_ang_vel", platformMaxAngVel)) {
+    if (!nh->has_parameter("platform_max_ang_vel")) {
         platformMaxAngVel = 1.0;
+    } else {
+        nh->get_parameter("platform_max_ang_vel", platformMaxAngVel);
     }
 
-    platformController = new RobilePlatformController(nh);
+    platformController = std::make_shared<RobilePlatformController>(nh);
     platformController->setMaxPlatformVelocity(platformMaxLinVel, platformMaxAngVel);
 
-    ros::Rate loopRate(20);
-    while (ros::ok()) {
-        ros::spinOnce();
+    rclcpp::WallRate loopRate(50);
+
+    while (rclcpp::ok()) {
+        rclcpp::spin_some(nh);
         platformController->step();
         platformController->publishOdomToBaseLinkTF();
-        platformController->publishOdom();
         platformController->publishPivotMarkers();
-
         loopRate.sleep();
     }
 
+    rclcpp::shutdown();
     return 0;
 }
